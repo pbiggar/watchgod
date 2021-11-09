@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 class AllWatcher:
     def __init__(self, root_path: Union[Path, str], ignored_paths: Optional[Set[str]] = None) -> None:
+        print("starting AllWatcher")
         self.files: Dict[str, float] = {}
         self.root_path = str(root_path)
         self.ignored_paths = ignored_paths
@@ -35,6 +36,7 @@ class AllWatcher:
         return True
 
     def _walk(self, path: str, changes: Set['FileChange'], new_files: Dict[str, float]) -> None:
+        print("walking: " + path)
         if os.path.isfile(path):
             self._watch_file(path, changes, new_files, os.stat(path))
         else:
@@ -53,6 +55,7 @@ class AllWatcher:
 
     def _walk_dir(self, dir_path: str, changes: Set['FileChange'], new_files: Dict[str, float]) -> None:
         for entry in os.scandir(dir_path):
+            print("scanning" + os.path.join(dir_path, entry))
             if self.ignored_paths is not None and os.path.join(dir_path, entry) in self.ignored_paths:
                 continue
 
@@ -63,14 +66,11 @@ class AllWatcher:
                 self._watch_file(entry.path, changes, new_files, entry.stat())
 
     def check(self) -> Set['FileChange']:
+        print("starting check")
         changes: Set['FileChange'] = set()
         new_files: Dict[str, float] = {}
         try:
             self._walk(self.root_path, changes, new_files)
-        except FileNotFoundError as e:
-            # happens when a directory has been deleted between checks, or when
-            # checking a broken symlink
-            pass
         except OSError as e:
             # check for unexpected errors
             logger.warning('error walking file system: %s %s', e.__class__.__name__, e)

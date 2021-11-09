@@ -30,11 +30,13 @@ def watch(path: Union[Path, str], **kwargs: Any) -> Generator['FileChanges', Non
     """
     Watch a directory and yield a set of changes whenever files change in that directory or its subdirectories.
     """
+    print("starting to watch")
     loop = asyncio.new_event_loop()
     try:
         _awatch = awatch(path, loop=loop, **kwargs)
         while True:
             try:
+                print("finding next")
                 yield loop.run_until_complete(_awatch.__anext__())
             except StopAsyncIteration:
                 break
